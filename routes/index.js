@@ -3,6 +3,9 @@ const jwt = require('jsonwebtoken');
 const router = express.Router();
 const passport = require("passport");
 const dotenv = require('dotenv').config()
+const Token = require("../models/token");
+const uuid = require('uuid');
+const ObjectId = require('mongoose').Types.ObjectId;
 
 router.post(
   '/login',
@@ -23,9 +26,17 @@ router.post(
               if (error) return next(error);
 
               const body = { _id: user._id, username: user.username };
-              const token = jwt.sign({ user: body }, dotenv.parsed.SECRET, { expiresIn: '15m' });
+              const authToken = jwt.sign({ user: body }, dotenv.parsed.SECRET, { expiresIn: '15m' });
+              let d1 = new Date();
+              const refreshToken = new Token({
+                user: new ObjectId(user._id),
+                token: uuid.v4(),
+                expiryDate: new Date().setMinutes(d1.getDay + 1)
+              });
+              const result = await refreshToken.save();
 
-              res.cookie('authToken', token, { maxAge: 900000, httpOnly: true })
+              res.cookie('authToken', authToken, { maxAge: 900000, httpOnly: true })
+              res.cookie('refreshToken', refreshToken.token, { maxAge: 900000, httpOnly: true })
               res.json({ username: user.username });
             }
           );
@@ -37,13 +48,8 @@ router.post(
   }
 );
 
-router.get('auth/me', verifyJWT, (req, res) => {
-  /* If the checkToken function succeeds, the API reaches this block. 
-  At this point, you have the freedom to perform any desired actions. 
-  Additionally, you can access req.user, a parameter sent from 
-  the checkToken function. */
+router.get('/auth', verifyJWT, (req, res) => {
 
-  // If the user is authenticated, return the user
   res.json(req.user);
 })
 
@@ -55,11 +61,26 @@ function verifyJWT(req, res, next) {
 
   jwt.verify(authToken, dotenv.parsed.SECRET, async (err, authData) => {
     if (err) {
-      res.sendStatus(403);
+      refreshJWT
     } else {
       next();
     }
   })
+}
+
+async function refreshJWT(req, res, next) {
+  const refreshToken = req.cookies['refreshToken'];
+
+  // If there is no cookie, return an error
+  if (refreshToken == null) return res.sendStatus(401);
+
+  const token = await Token.find({ "token": refreshToken }).sort({ name: 1 }).exec();
+  if(new Date() < token.Date){
+    // Create new auth token
+  }
+  else {
+    res.sendStatus(403)
+  }
 }
 
 module.exports = router;
