@@ -61,25 +61,30 @@ function verifyJWT(req, res, next) {
 
   jwt.verify(authToken, dotenv.parsed.SECRET, async (err, authData) => {
     if (err) {
-      refreshJWT
+      console.log(authData);
+      refreshJWT(authData)
     } else {
       next();
     }
   })
 }
 
-async function refreshJWT(req, res, next) {
-  const refreshToken = req.cookies['refreshToken'];
+function refreshJWT(authData) {
+  return async (req, res, next) => {
+    const refreshToken = req.cookies['refreshToken'];
 
-  // If there is no cookie, return an error
-  if (refreshToken == null) return res.sendStatus(401);
+    // If there is no cookie, return an error
+    if (refreshToken == null) return res.sendStatus(401);
 
-  const token = await Token.find({ "token": refreshToken }).sort({ name: 1 }).exec();
-  if(new Date() < token.Date){
-    // Create new auth token
-  }
-  else {
-    res.sendStatus(403)
+    const token = await Token.find({ "token": refreshToken }).sort({ name: 1 }).exec();
+    if (new Date() < token.Date) {
+      // Create new auth token
+      console.log(authData);
+    }
+    else {
+      await Token.deleteOne({ "token": refreshToken })
+      res.sendStatus(401)
+    }
   }
 }
 
