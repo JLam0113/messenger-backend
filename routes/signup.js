@@ -9,7 +9,6 @@ router.post("/", async (req, res, next) => {
             // if err, do something
             if (err) {
                 console.log("error hashing");
-                res.redirect('back');
                 return;
             }
             // otherwise, store hashedPassword in DB

@@ -65,7 +65,12 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: false }));
-app.use(cors());
+
+const corsOptions = {
+  origin: true, //included origin as true
+  credentials: true, //included credentials as true
+};
+app.use(cors(corsOptions));
 app.use(cookieParser())
 
 

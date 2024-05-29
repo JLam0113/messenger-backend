@@ -27,11 +27,11 @@ router.post(
 
               const body = { _id: user._id, username: user.username };
               const authToken = jwt.sign({ user: body }, dotenv.parsed.SECRET, { expiresIn: '15m' });
-              let d1 = new Date();
+              let d1 = new Date(Date.now() + 2 * (60 * 60 * 1000) );
               const refreshToken = new Token({
                 user: new ObjectId(user._id),
                 token: uuid.v4(),
-                expiryDate: new Date().setMinutes(d1.getDay + 1)
+                expiryDate: d1
               });
               const result = await refreshToken.save();
 
@@ -49,21 +49,19 @@ router.post(
 );
 
 router.get('/auth', verifyJWT, (req, res) => {
-
-  res.json(req.user);
+  res.json({username: res.locals.user.username})
 })
 
 function verifyJWT(req, res, next) {
   const authToken = req.cookies['authToken'];
-
   // If there is no cookie, return an error
   if (authToken == null) return res.sendStatus(401);
 
   jwt.verify(authToken, dotenv.parsed.SECRET, async (err, authData) => {
     if (err) {
-      console.log(authData);
       refreshJWT(authData)
     } else {
+      res.locals.user = authData.user;
       next();
     }
   })
@@ -79,7 +77,10 @@ function refreshJWT(authData) {
     const token = await Token.find({ "token": refreshToken }).sort({ name: 1 }).exec();
     if (new Date() < token.Date) {
       // Create new auth token
-      console.log(authData);
+      const authToken = jwt.sign({ user: authData.user }, dotenv.parsed.SECRET, { expiresIn: '15m' });
+      res.cookie('authToken', authToken, { maxAge: 900000, httpOnly: true })
+      res.locals.user = authData.user;
+      next();
     }
     else {
       await Token.deleteOne({ "token": refreshToken })
