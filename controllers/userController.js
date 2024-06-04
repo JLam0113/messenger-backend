@@ -12,7 +12,7 @@ exports.search = [
       res.sendStatus(500)
     }
     else {
-      const allUsers = await User.find({ $text: { $search: req.body.user}}).sort({ username: 1 }).exec();
+      const allUsers = await User.find({ $text: { $search: req.params.user } }, { _id: 1, username: 1 }).sort({ username: 1 }).exec();
       res.json({ users: allUsers })
     }
   }),];
