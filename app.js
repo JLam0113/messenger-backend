@@ -17,6 +17,7 @@ let indexRouter = require('./routes/index');
 let signUpRouter = require('./routes/signup');
 let chatRoomRouter = require('./routes/chatroom');
 let messageRouter = require('./routes/message');
+let userRouter = require('./routes/user');
 
 const mongoDb = "mongodb+srv://" + dotenv.parsed.USERNAME + ":" + dotenv.parsed.PASSWORD + "@cluster0.y2sspz1.mongodb.net/messenger?retryWrites=true&w=majority&appName=Cluster0";
 
@@ -80,6 +81,7 @@ app.use('/', indexRouter);
 app.use('/signup', signUpRouter);
 app.use('/chatroom', chatRoomRouter);
 app.use('/message', messageRouter);
+app.use('/user', userRouter);
 
 app.use(function(req, res, next) {
   next(createError(404));
