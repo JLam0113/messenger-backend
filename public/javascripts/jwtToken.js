@@ -1,3 +1,6 @@
+const jwt = require('jsonwebtoken');
+const dotenv = require('dotenv').config()
+
 function verifyJWT(req, res, next) {
     const authToken = req.cookies['authToken'];
     // If there is no cookie, return an error
@@ -35,4 +38,4 @@ function refreshJWT(authData) {
     }
 }
 
-module.exports = jwtToken;
+module.exports = { verifyJWT };

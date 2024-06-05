@@ -17,7 +17,6 @@ router.post(
         try {
           if (err || !user) {
             const error = new Error('An error occurred.');
-
             return next(error);
           }
           req.login(
@@ -38,7 +37,7 @@ router.post(
 
               res.cookie('authToken', authToken, { maxAge: 900000, httpOnly: true })
               res.cookie('refreshToken', refreshToken.token, { maxAge: 900000, httpOnly: true })
-              res.json({ username: user.username });
+              res.status(200).json({ username: user.username });
             }
           );
         } catch (error) {

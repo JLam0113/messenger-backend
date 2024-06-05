@@ -65,7 +65,6 @@ const app = express();
 
 app.use(logger('dev'));
 app.use(express.json());
-app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: false }));
 
@@ -75,7 +74,6 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 app.use(cookieParser())
-
 
 app.use('/', indexRouter);
 app.use('/signup', signUpRouter);
@@ -89,6 +87,7 @@ app.use(function(req, res, next) {
 
 // error handler
 app.use(function(err, req, res, next) {
+  console.log(err)
   res.status(err.status || 500);
   res.json({error: err});
 });
