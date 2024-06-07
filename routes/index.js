@@ -49,7 +49,7 @@ router.post(
 );
 
 router.get('/auth', jwtToken.verifyJWT, (req, res) => {
-  res.json({ username: res.locals.user.username })
+  res.json({ id: res.locals.user._id, username: res.locals.user.username })
 });
 
 module.exports = router;

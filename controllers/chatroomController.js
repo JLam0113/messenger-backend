@@ -28,9 +28,7 @@ exports.create = [
       res.sendStatus(500)
     }
     else {
-      await chatRoom.save(function (err, room) {
-        res.json({ id: room.id, result: 'Chat room created' })
-      });
+      await chatRoom.save().then((response) => res.json({ id: response.id, result: 'Chat room created' }))
     }
   }),];
 
