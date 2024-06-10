@@ -6,29 +6,27 @@ const { body, validationResult } = require("express-validator");
 const asyncHandler = require("express-async-handler");
 
 exports.index = asyncHandler(async (req, res, next) => {
-  const allChatRooms = await ChatRoom.find({ users: req.param.id }).sort({ lastMessage: 1 }).exec();
+  const allChatRooms = await ChatRoom.find({ users: req.query.id }).sort({ lastMessage: 1 }).exec();
   res.json({ chatrooms: allChatRooms })
 });
 
 exports.messages = asyncHandler(async (req, res, next) => {
-  const allMessages = await Message.find({ "chatroom": new ObjectId(req.params.id) }).sort({ date: 1 }).exec();
+  const allMessages = await Message.find({ "chatroom": new ObjectId(req.query.id) }).sort({ date: 1 }).exec();
   res.json({ messages: allMessages })
 });
 
-// TODO Users is empty when saved
 exports.create = [
   body("users", "content must be specified").trim().isLength({ min: 1 }).escape(),
   asyncHandler(async (req, res, next) => {
     const errors = validationResult(req);
-    const users = []
-    req.body.users.forEach(user => {
-      users.push(new ObjectId(user))
+    const users = req.body.users.map( (user) => {
+      return new ObjectId(user)
     });
     const chatRoom = new ChatRoom({
       users: users,
       lastMessage: new Date(),
     });
-
+    
     if (!errors.isEmpty()) {
       res.sendStatus(500)
     }
