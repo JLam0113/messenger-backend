@@ -1,5 +1,4 @@
 const User = require("../models/user");
-const ObjectId = require('mongoose').Types.ObjectId;
 
 const { query, validationResult } = require("express-validator");
 const asyncHandler = require("express-async-handler");

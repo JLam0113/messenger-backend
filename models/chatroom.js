@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const ChatRoomSchema = new Schema({
-  users: { type: [{ type: Schema.ObjectId, ref: "User" }], required: true },
+  users: [{ type: Schema.Types.ObjectId, ref: "User" }],
   lastMessage: { type: Date, required: true }
 });
 

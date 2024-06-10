@@ -15,12 +15,17 @@ exports.messages = asyncHandler(async (req, res, next) => {
   res.json({ messages: allMessages })
 });
 
+// TODO Users is empty when saved
 exports.create = [
   body("users", "content must be specified").trim().isLength({ min: 1 }).escape(),
   asyncHandler(async (req, res, next) => {
     const errors = validationResult(req);
+    const users = []
+    req.body.users.forEach(user => {
+      users.push(new ObjectId(user))
+    });
     const chatRoom = new ChatRoom({
-      user: req.body.users,
+      users: users,
       lastMessage: new Date(),
     });
 
