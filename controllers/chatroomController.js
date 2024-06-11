@@ -6,7 +6,7 @@ const { body, validationResult } = require("express-validator");
 const asyncHandler = require("express-async-handler");
 
 exports.index = asyncHandler(async (req, res, next) => {
-  const allChatRooms = await ChatRoom.find({ users: req.query.id }).sort({ lastMessage: 1 }).exec();
+  const allChatRooms = await ChatRoom.find({ users: req.query.id }).populate('users', 'username -_id').sort({ lastMessage: 1 }).exec();
   res.json({ chatrooms: allChatRooms })
 });
 
