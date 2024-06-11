@@ -5,7 +5,7 @@ function verifyJWT(req, res, next) {
     const authToken = req.cookies['authToken'];
     // If there is no cookie, return an error
     if (authToken == null) return res.sendStatus(401);
-
+    
     jwt.verify(authToken, dotenv.parsed.SECRET, async (err, authData) => {
         if (err) {
             refreshJWT(authData)
