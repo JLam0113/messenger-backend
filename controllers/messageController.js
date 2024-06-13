@@ -22,9 +22,9 @@ exports.create = [
       res.sendStatus(500)
     }
     else {
-      await message.save().then(() => {
-        chatroom_controller.index
-        res.json({ result: 'Message created' })
+      await message.save().then((response) => {
+        chatroom_controller.updateTime
+        res.json({ response })
       })
     }
   }),];
