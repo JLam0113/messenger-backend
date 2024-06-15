@@ -13,7 +13,7 @@ exports.create = [
     const errors = validationResult(req);
     const message = new Message({
       chatroom: new ObjectId(req.body.chatroom),
-      user: new ObjectId(req.body.chatroom),
+      user: new ObjectId(req.body.user),
       date: new Date(),
       message: req.body.message,
     });

@@ -11,7 +11,7 @@ exports.index = asyncHandler(async (req, res, next) => {
 });
 
 exports.messages = asyncHandler(async (req, res, next) => {
-  const allMessages = await Message.find({ "chatroom": new ObjectId(req.params.id) }).sort({ date: 1 }).exec();
+  const allMessages = await Message.find({ "chatroom": new ObjectId(req.params.id) }).populate('user', 'username -_id').sort({ date: 1 }).exec();
   res.json({ messages: allMessages })
 });
 
