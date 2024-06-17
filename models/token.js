@@ -4,6 +4,7 @@ const Schema = mongoose.Schema;
 
 const TokenSchema = new Schema({
   user: { type: Schema.ObjectId, ref: "User", required: true },
+  authToken: { type: String, required: true },
   token: { type: String, required: true },
   expiryDate: { type: Date, required: true },
 });

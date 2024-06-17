@@ -26,10 +26,11 @@ router.post(
               if (error) return next(error);
 
               const body = { _id: user._id, username: user.username };
-              const authToken = jwt.sign({ user: body }, dotenv.parsed.SECRET, { expiresIn: '15m' });
+              const authToken = jwt.sign({ user: body }, dotenv.parsed.SECRET, { expiresIn: '1m' });
               let d1 = new Date(Date.now() + 60 * 60 * 24 * 1000);
               const refreshToken = new Token({
                 user: new ObjectId(user._id),
+                authToken: authToken,
                 token: uuid.v4(),
                 expiryDate: d1
               });
@@ -37,7 +38,7 @@ router.post(
 
               res.cookie('authToken', authToken, { maxAge: 900000, httpOnly: true })
               res.cookie('refreshToken', refreshToken.token, { maxAge: 900000, httpOnly: true })
-              res.status(200).json({ username: user.username });
+              res.status(200).json({ id: user._id, username: user.username });
             }
           );
         } catch (error) {
@@ -48,8 +49,6 @@ router.post(
   }
 );
 
-router.get('/auth', jwtToken.verifyJWT, (req, res) => {
-  res.json({ id: res.locals.user._id, username: res.locals.user.username })
-});
+router.get('/auth', jwtToken.verifyJWT)
 
 module.exports = router;

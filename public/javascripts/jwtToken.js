@@ -1,41 +1,41 @@
 const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv').config()
+const Token = require("../../models/token");
 
-function verifyJWT(req, res, next) {
+async function verifyJWT(req, res, next) {
     const authToken = req.cookies['authToken'];
-    // If there is no cookie, return an error
+
     if (authToken == null) return res.sendStatus(401);
-    
+
     jwt.verify(authToken, dotenv.parsed.SECRET, async (err, authData) => {
         if (err) {
-            refreshJWT(authData)
+            const refreshToken = req.cookies['refreshToken'];
+
+            if (refreshToken == null) return res.sendStatus(401);
+
+            const token = await Token.findOne({ "token": refreshToken, "authToken": authToken }).populate('user', '_id username').exec();
+
+            if (token !== null) {
+                if (new Date() < token.expiryDate) {
+                    const body = { _id: token.user._id, username: token.user.username };
+                    const authToken = jwt.sign({ user: body }, dotenv.parsed.SECRET, { expiresIn: '1m' });
+
+                    res.cookie('authToken', authToken, { maxAge: 900000, httpOnly: true })
+                    await Token.findByIdAndUpdate(token._id, { authToken: authToken }, {});
+                    res.status(200).json({ id: token.user._id, username: token.user.username })
+                }
+                else {
+                    await Token.deleteOne({ "token": refreshToken })
+                    res.sendStatus(401)
+                }
+            }
+            else {
+                res.sendStatus(401)
+            }
         } else {
-            res.locals.user = authData.user;
-            next();
+            res.status(200).json({ id: authData.user._id, username: authData.user.username })
         }
     })
-}
-
-function refreshJWT(authData) {
-    return async (req, res, next) => {
-        const refreshToken = req.cookies['refreshToken'];
-
-        // If there is no cookie, return an error
-        if (refreshToken == null) return res.sendStatus(401);
-
-        const token = await Token.find({ "token": refreshToken }).sort({ name: 1 }).exec();
-        if (new Date() < token.Date) {
-            // Create new auth token
-            const authToken = jwt.sign({ user: authData.user }, dotenv.parsed.SECRET, { expiresIn: '15m' });
-            res.cookie('authToken', authToken, { maxAge: 900000, httpOnly: true })
-            res.locals.user = authData.user;
-            next();
-        }
-        else {
-            await Token.deleteOne({ "token": refreshToken })
-            res.sendStatus(401)
-        }
-    }
 }
 
 module.exports = { verifyJWT };

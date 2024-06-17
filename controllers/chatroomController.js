@@ -37,9 +37,6 @@ exports.create = [
 
 exports.updateTime = [
   asyncHandler(async (req, res, next) => {
-    const chatRoom = new ChatRoom({
-      lastMessage: new Date(),
-    });
-    await chatRoom.findByIdAndUpdate(req.body.chatroom, chatRoom, {});
+    await chatRoom.findByIdAndUpdate(req.body.chatroom, { lastMessage: new Date() }, {});
     next();
   }),];
