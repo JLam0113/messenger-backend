@@ -26,7 +26,7 @@ router.post(
               if (error) return next(error);
 
               const body = { _id: user._id, username: user.username };
-              const authToken = jwt.sign({ user: body }, dotenv.parsed.SECRET, { expiresIn: '1m' });
+              const authToken = jwt.sign({ user: body }, dotenv.parsed.SECRET, { expiresIn: '15m' });
               let d1 = new Date(Date.now() + 60 * 60 * 24 * 1000);
               const refreshToken = new Token({
                 user: new ObjectId(user._id),
@@ -49,6 +49,8 @@ router.post(
   }
 );
 
-router.get('/auth', jwtToken.verifyJWT)
+router.get('/auth', jwtToken.verifyJWT, (req, res) => {
+  res.json({ id: res.locals.user._id, username: res.locals.user.username })
+});
 
 module.exports = router;

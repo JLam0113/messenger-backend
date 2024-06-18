@@ -18,11 +18,12 @@ async function verifyJWT(req, res, next) {
             if (token !== null) {
                 if (new Date() < token.expiryDate) {
                     const body = { _id: token.user._id, username: token.user.username };
-                    const authToken = jwt.sign({ user: body }, dotenv.parsed.SECRET, { expiresIn: '1m' });
+                    const authToken = jwt.sign({ user: body }, dotenv.parsed.SECRET, { expiresIn: '15m' });
 
                     res.cookie('authToken', authToken, { maxAge: 900000, httpOnly: true })
                     await Token.findByIdAndUpdate(token._id, { authToken: authToken }, {});
-                    res.status(200).json({ id: token.user._id, username: token.user.username })
+                    res.locals.user = token.user;
+                    next()
                 }
                 else {
                     await Token.deleteOne({ "token": refreshToken })
@@ -33,7 +34,8 @@ async function verifyJWT(req, res, next) {
                 res.sendStatus(401)
             }
         } else {
-            res.status(200).json({ id: authData.user._id, username: authData.user.username })
+            res.locals.user = authData.user;
+            next()
         }
     })
 }

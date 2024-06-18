@@ -24,7 +24,7 @@ exports.create = [
     else {
       await message.save().then((response) => {
         chatroom_controller.updateTime
-        res.json({ response })
+        res.status(200).json({ response })
       })
     }
   }),];

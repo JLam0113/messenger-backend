@@ -12,6 +12,6 @@ exports.search = [
     }
     else {
       const allUsers = await User.find({ $text: { $search: req.query.user } }, { _id: 1, username: 1 }).sort({ username: 1 }).exec();
-      res.json({ users: allUsers })
+      res.status(200).json({ users: allUsers })
     }
   }),];

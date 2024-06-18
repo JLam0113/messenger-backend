@@ -7,12 +7,12 @@ const asyncHandler = require("express-async-handler");
 
 exports.index = asyncHandler(async (req, res, next) => {
   const allChatRooms = await ChatRoom.find({ users: req.query.id }).populate('users', 'username -_id').sort({ lastMessage: 1 }).exec();
-  res.json({ chatrooms: allChatRooms })
+  res.status(200).json({ chatrooms: allChatRooms })
 });
 
 exports.messages = asyncHandler(async (req, res, next) => {
   const allMessages = await Message.find({ "chatroom": new ObjectId(req.params.id) }).populate('user', 'username -_id').sort({ date: 1 }).exec();
-  res.json({ messages: allMessages })
+  res.status(200).json({ messages: allMessages })
 });
 
 exports.create = [
@@ -31,12 +31,14 @@ exports.create = [
       res.sendStatus(500)
     }
     else {
-      await chatRoom.save().then((response) => res.json({ id: response.id, result: 'Chat room created' }))
+      await chatRoom.save().then((response) => res.status(200).json({ id: response.id, result: 'Chat room created' }))
     }
   }),];
 
-exports.updateTime = [
+exports.updateTime =
   asyncHandler(async (req, res, next) => {
-    await chatRoom.findByIdAndUpdate(req.body.chatroom, { lastMessage: new Date() }, {});
+    await chatRoom.findByIdAndUpdate(req.body.chatroom, { lastMessage: new Date() }, {}).then((response) => {
+      console.log(response)
+    });
     next();
-  }),];
+  });
