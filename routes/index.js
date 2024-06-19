@@ -36,8 +36,8 @@ router.post(
               });
               const result = await refreshToken.save();
 
-              res.cookie('authToken', authToken, { maxAge: 900000, httpOnly: true })
-              res.cookie('refreshToken', refreshToken.token, { maxAge: 900000, httpOnly: true })
+              res.cookie('authToken', authToken, { maxAge: 86400000, httpOnly: true })
+              res.cookie('refreshToken', refreshToken.token, { maxAge: 86400000, httpOnly: true })
               res.status(200).json({ id: user._id, username: user.username });
             }
           );

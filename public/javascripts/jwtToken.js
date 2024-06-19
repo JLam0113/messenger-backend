@@ -14,7 +14,7 @@ async function verifyJWT(req, res, next) {
             if (refreshToken == null) return res.sendStatus(401);
 
             const token = await Token.findOne({ "token": refreshToken, "authToken": authToken }).populate('user', '_id username').exec();
-
+            
             if (token !== null) {
                 if (new Date() < token.expiryDate) {
                     const body = { _id: token.user._id, username: token.user.username };
