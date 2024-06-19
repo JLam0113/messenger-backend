@@ -1,9 +1,10 @@
 const Message = require("../models/message");
 const ObjectId = require('mongoose').Types.ObjectId;
-const chatroom_controller = require("../controllers/chatroomController")
-
 const { body, validationResult } = require("express-validator");
 const asyncHandler = require("express-async-handler");
+const mongoose = require("mongoose");
+const ChatRoom = require("../models/chatroom");
+
 
 exports.create = [
   body("chatroom", "content must be specified").trim().isLength({ min: 1 }).escape(),
@@ -22,9 +23,20 @@ exports.create = [
       res.sendStatus(500)
     }
     else {
-      await message.save().then((response) => {
-        chatroom_controller.updateTime
-        res.status(200).json({ response })
-      })
+      const session = await mongoose.startSession()
+      try {
+        session.startTransaction()
+
+        const createdMessage = await message.save({ session })
+        await ChatRoom.findByIdAndUpdate(req.body.chatroom, { lastMessage: message.date }, { session: session })
+
+        await session.commitTransaction()
+        res.status(200).json(createdMessage)
+      } catch (err) {
+        await session.abortTransaction()
+        console.error(err)
+      } finally {
+        await session.endSession()
+      }
     }
   }),];
