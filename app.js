@@ -12,7 +12,11 @@ const User = require("./models/user");
 const JWTstrategy = require('passport-jwt').Strategy;
 const ExtractJWT = require('passport-jwt').ExtractJwt;
 const cors = require('cors');
-
+const io = require("socket.io")(3000, {
+  cors: {
+    origin: "http://localhost:5173"
+  }
+});
 let indexRouter = require('./routes/index');
 let signUpRouter = require('./routes/signup');
 let chatRoomRouter = require('./routes/chatroom');
@@ -26,23 +30,23 @@ const db = mongoose.connection;
 db.on("error", console.error.bind(console, "mongo connection error"));
 
 passport.use('login',
-    new LocalStrategy(async (username, password, done) => {
-        try {
-            const user = await User.findOne({ username: username });
-            if (!user) {
-                return done(null, false, { message: "Incorrect username" });
-            };
-            const match = await bcrypt.compare(password, user.password);
-            if (!match) {
-                // passwords do not match!
-                return done(null, false, { message: "Incorrect password" })
-            }
+  new LocalStrategy(async (username, password, done) => {
+    try {
+      const user = await User.findOne({ username: username });
+      if (!user) {
+        return done(null, false, { message: "Incorrect username" });
+      };
+      const match = await bcrypt.compare(password, user.password);
+      if (!match) {
+        // passwords do not match!
+        return done(null, false, { message: "Incorrect password" })
+      }
 
-            return done(null, user);
-        } catch (err) {
-            return done(err);
-        };
-    })
+      return done(null, user);
+    } catch (err) {
+      return done(err);
+    };
+  })
 );
 
 passport.use(
@@ -60,6 +64,44 @@ passport.use(
     }
   )
 );
+
+let users = [];
+
+io.on("connection", socket => {
+
+  socket.on("addUser", userID => {
+    const userExists = users.find(user => user.userID === userID);
+    if (!userExists) {
+      const user = { userID, socketID: socket.id };
+      users.push(user);
+    }
+  });
+
+  socket.on("sendMessage", async ({ messageID, chatroomID, senderID, message, date }) => {
+    const chatroom = await ChatRoom.findById(chatroomID).populate('users');
+    const sender = await Users.findById(senderID);
+
+    if (chatroom.users !== undefined) {
+      chatroom.users.forEach((receiver) => {
+        if (receiver._id !== senderID) {
+          const receiver = users.find(user => user.userId === receiver._id);
+          io.to(receiver.socketId).emit("getMessage", {
+            messageID,
+            sender,
+            message,
+            date
+          });
+        }
+      })
+    }
+  });
+
+
+  socket.on("disconnect", () => {
+    users = users.filter(user => user.socketId !== socket.id);
+  });
+
+})
 
 const app = express();
 
@@ -81,17 +123,17 @@ app.use('/chatroom', chatRoomRouter);
 app.use('/message', messageRouter);
 app.use('/user', userRouter);
 
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
   next(createError(404));
 });
 
 // error handler
-app.use(function(err, req, res, next) {
+app.use(function (err, req, res, next) {
   if (res.headersSent) {
     return next(err)
   }
   console.error(err.stack)
-  res.status(500).json({error: err});
+  res.status(500).json({ error: err });
 });
 
 module.exports = app;
