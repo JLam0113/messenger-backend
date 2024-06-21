@@ -12,16 +12,18 @@ const User = require("./models/user");
 const JWTstrategy = require('passport-jwt').Strategy;
 const ExtractJWT = require('passport-jwt').ExtractJwt;
 const cors = require('cors');
-const io = require("socket.io")(3000, {
-  cors: {
-    origin: "http://localhost:5173"
-  }
-});
 let indexRouter = require('./routes/index');
 let signUpRouter = require('./routes/signup');
 let chatRoomRouter = require('./routes/chatroom');
 let messageRouter = require('./routes/message');
 let userRouter = require('./routes/user');
+const app = express();
+const http = require('http').Server(app);
+const io = require('socket.io')(http, {
+  cors: {
+    origin: "http://localhost:3000"
+  }
+});
 
 const mongoDb = "mongodb+srv://" + dotenv.parsed.USERNAME + ":" + dotenv.parsed.PASSWORD + "@cluster0.y2sspz1.mongodb.net/messenger?retryWrites=true&w=majority&appName=Cluster0";
 
@@ -102,8 +104,6 @@ io.on("connection", socket => {
   });
 
 })
-
-const app = express();
 
 app.use(logger('dev'));
 app.use(express.json());
