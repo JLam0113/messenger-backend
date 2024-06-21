@@ -9,21 +9,28 @@ const mongoose = require("mongoose");
 const dotenv = require('dotenv').config()
 const bcrypt = require('bcryptjs');
 const User = require("./models/user");
+const ChatRoom = require("./models/chatroom");
 const JWTstrategy = require('passport-jwt').Strategy;
 const ExtractJWT = require('passport-jwt').ExtractJwt;
 const cors = require('cors');
+const { createServer } = require("http");
+const { Server } = require("socket.io");
+
 let indexRouter = require('./routes/index');
 let signUpRouter = require('./routes/signup');
 let chatRoomRouter = require('./routes/chatroom');
 let messageRouter = require('./routes/message');
 let userRouter = require('./routes/user');
+
 const app = express();
-const http = require('http').Server(app);
-const io = require('socket.io')(http, {
+const server = createServer(app);
+const socketOptions = {
   cors: {
-    origin: "http://localhost:3000"
+    origin: "http://localhost:5173"
   }
-});
+};
+
+const io = new Server(server, socketOptions);
 
 const mongoDb = "mongodb+srv://" + dotenv.parsed.USERNAME + ":" + dotenv.parsed.PASSWORD + "@cluster0.y2sspz1.mongodb.net/messenger?retryWrites=true&w=majority&appName=Cluster0";
 
@@ -67,16 +74,39 @@ passport.use(
   )
 );
 
+app.use(logger('dev'));
+app.use(express.json());
+app.use(cookieParser())
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.urlencoded({ extended: false }));
+
+const corsOptions = {
+  origin: true, //included origin as true
+  credentials: true, //included credentials as true
+};
+app.use(cors(corsOptions));
+
+app.use('/', indexRouter);
+app.use('/signup', signUpRouter);
+app.use('/chatroom', chatRoomRouter);
+app.use('/message', messageRouter);
+app.use('/user', userRouter);
+
 let users = [];
 
-io.on("connection", socket => {
-
+io.on("connection", (socket) => {
+  console.log("test");
   socket.on("addUser", userID => {
     const userExists = users.find(user => user.userID === userID);
     if (!userExists) {
       const user = { userID, socketID: socket.id };
       users.push(user);
+      console.log(user + " is connected");
     }
+  });
+
+  socket.on("connect_error", (err) => {
+    console.log(`connect_error due to ${err.message}`);
   });
 
   socket.on("sendMessage", async ({ messageID, chatroomID, senderID, message, date }) => {
@@ -105,24 +135,6 @@ io.on("connection", socket => {
 
 })
 
-app.use(logger('dev'));
-app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.urlencoded({ extended: false }));
-
-const corsOptions = {
-  origin: true, //included origin as true
-  credentials: true, //included credentials as true
-};
-app.use(cors(corsOptions));
-app.use(cookieParser())
-
-app.use('/', indexRouter);
-app.use('/signup', signUpRouter);
-app.use('/chatroom', chatRoomRouter);
-app.use('/message', messageRouter);
-app.use('/user', userRouter);
-
 app.use(function (req, res, next) {
   next(createError(404));
 });
@@ -135,5 +147,7 @@ app.use(function (err, req, res, next) {
   console.error(err.stack)
   res.status(500).json({ error: err });
 });
+
+server.listen(3000);
 
 module.exports = app;
