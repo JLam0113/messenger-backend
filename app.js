@@ -95,13 +95,12 @@ app.use('/user', userRouter);
 let users = [];
 
 io.on("connection", (socket) => {
-  console.log("test");
   socket.on("addUser", userID => {
     const userExists = users.find(user => user.userID === userID);
     if (!userExists) {
       const user = { userID, socketID: socket.id };
       users.push(user);
-      console.log(user + " is connected");
+      console.log(user.userID + " is connected");
     }
   });
 
@@ -111,18 +110,19 @@ io.on("connection", (socket) => {
 
   socket.on("sendMessage", async ({ messageID, chatroomID, senderID, message, date }) => {
     const chatroom = await ChatRoom.findById(chatroomID).populate('users');
-    const sender = await Users.findById(senderID);
-
+    const sender = await User.findById(senderID);
     if (chatroom.users !== undefined) {
       chatroom.users.forEach((receiver) => {
-        if (receiver._id !== senderID) {
-          const receiver = users.find(user => user.userId === receiver._id);
-          io.to(receiver.socketId).emit("getMessage", {
-            messageID,
-            sender,
-            message,
-            date
-          });
+        if (!receiver._id.equals(senderID)) {
+          const receiverID = users.find(user => receiver._id.equals(user.userID));
+          if (receiverID !== undefined) {
+            io.to(receiverID.socketID).emit("getMessage", {
+              id: messageID,
+              username: sender.username,
+              message,
+              date
+            });
+          }
         }
       })
     }
