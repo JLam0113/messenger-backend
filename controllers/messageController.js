@@ -31,7 +31,7 @@ exports.create = [
         await ChatRoom.findByIdAndUpdate(req.body.chatroom, { lastMessage: message.date }, { session: session })
 
         await session.commitTransaction()
-        res.status(200).json(createdMessage)
+        res.status(210).json(createdMessage)
       } catch (err) {
         await session.abortTransaction()
         console.error(err)

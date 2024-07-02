@@ -31,14 +31,6 @@ exports.create = [
       res.sendStatus(500)
     }
     else {
-      await chatRoom.save().then((response) => res.status(200).json({ id: response.id, result: 'Chat room created' }))
+      await chatRoom.save().then((response) => res.status(201).json({ id: response.id, result: 'Chat room created' }))
     }
   }),];
-
-exports.updateTime =
-  asyncHandler(async (req, res, next) => {
-    await chatRoom.findByIdAndUpdate(req.body.chatroom, { lastMessage: new Date() }, {}).then((response) => {
-      console.log(response)
-    });
-    next();
-  });

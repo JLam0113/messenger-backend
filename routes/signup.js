@@ -17,7 +17,7 @@ router.post("/", async (req, res, next) => {
                 password: hashedPassword
             });
             const result = await user.save();
-            res.json({message: 'User registered'})
+            res.statusCode(201).json({message: 'User registered'})
         });
     } catch (err) {
         return next(err);
